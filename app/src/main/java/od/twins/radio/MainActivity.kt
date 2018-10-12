@@ -10,6 +10,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.support.v4.media.session.MediaControllerCompat
 import android.support.v7.app.AppCompatActivity
 import be.rijckaert.tim.animatedvector.FloatingMusicActionButton
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private var notification: Notification? = null
     private var notificationManager: NotificationManager? = null
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -29,8 +31,8 @@ class MainActivity : AppCompatActivity() {
             isPlaying = if (!isPlaying) {
                 playRadio()
                 fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
-                if (notification == null)
-                    notification = generateNotification(applicationContext)
+//                if (notification == null)
+//                    notification = generateNotification(applicationContext)
                 notificationManager?.notify(33, notification)
                 true
             } else {
@@ -61,36 +63,36 @@ class MainActivity : AppCompatActivity() {
         initPlayer()
     }
 
-    private fun generateNotification(context: Context): Notification {
-        return Notification.Builder(context)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setSmallIcon(R.drawable.ic_radio)
-                .setAutoCancel(false)
-//                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
-//                        R.drawable.ic_stop), "stop", getStopIntent(this)).build())
-                .addAction(generateAction(R.drawable.stop_icon,"stop", "action_stop"))
-                .addAction(generateAction(R.drawable.pause_icon,"pause", "action_pause"))
-//                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
-//                        R.drawable.ic_play_arrow), "play", null).build())
-                .setContentTitle("mAuthor")
-                .setContentText("mTitle")
-                .setColor(resources.getColor(R.color.colorAccent))
-                .setUsesChronometer(true)
-                .setContentIntent(PendingIntent.getService(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT))
-                .build()
+//    private fun generateNotification(context: Context): Notification {
+//        return Notification.Builder(context)
+//                .setVisibility(Notification.VISIBILITY_PUBLIC)
+//                .setSmallIcon(R.drawable.ic_radio)
+//                .setAutoCancel(false)
+////                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
+////                        R.drawable.ic_stop), "stop", getStopIntent(this)).build())
+//                .addAction(generateAction(R.drawable.stop_icon,"stop", "action_stop"))
+//                .addAction(generateAction(R.drawable.pause_icon,"pause", "action_pause"))
+////                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
+////                        R.drawable.ic_play_arrow), "play", null).build())
+//                .setContentTitle("mAuthor")
+//                .setContentText("mTitle")
+//                .setColor(resources.getColor(R.color.colorAccent))
+//                .setUsesChronometer(true)
+//                .setContentIntent(PendingIntent.getService(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT))
+//                .build()
+//
+//    }
 
-    }
-
-    private fun generateAction(icon: Int, title: String, intentAction: String): Notification.Action {
-        val intent = Intent(applicationContext, MainActivity::class.java)
-        intent.action = intentAction
-        val pendingIntent = PendingIntent.getService(applicationContext, 1, intent, 0)
-        return Notification.Action.Builder(icon, title, pendingIntent).build()
-    }
-
-    private fun getStopIntent(context: Context): PendingIntent? {
-        val controlIntent = Intent("od.twins.radio.mediacontrol")
-        controlIntent.putExtra("Notification_playback_state", "pause")
-        return PendingIntent.getBroadcast(context, 101, controlIntent, 0)
-    }
+//    private fun generateAction(icon: Int, title: String, intentAction: String): Notification.Action {
+//        val intent = Intent(applicationContext, MainActivity::class.java)
+//        intent.action = intentAction
+//        val pendingIntent = PendingIntent.getService(applicationContext, 1, intent, 0)
+//        return Notification.Action.Builder(icon, title, pendingIntent).build()
+//    }
+//
+//    private fun getStopIntent(context: Context): PendingIntent? {
+//        val controlIntent = Intent("od.twins.radio.mediacontrol")
+//        controlIntent.putExtra("Notification_playback_state", "pause")
+//        return PendingIntent.getBroadcast(context, 101, controlIntent, 0)
+//    }
 }
