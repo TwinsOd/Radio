@@ -1,98 +1,92 @@
 package od.twins.radio
 
-import android.app.Notification
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
-import android.media.AudioAttributes
-import android.media.AudioManager
-import android.media.MediaPlayer
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
+import android.os.RemoteException
 import android.support.v4.media.session.MediaControllerCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.support.v7.app.AppCompatActivity
+import android.widget.Toast
 import be.rijckaert.tim.animatedvector.FloatingMusicActionButton
 import kotlinx.android.synthetic.main.activity_main.*
+import od.twins.radio.service.PlayerService
 
 class MainActivity : AppCompatActivity() {
     private var isPlaying = false
-    private var player: MediaPlayer = MediaPlayer()
-    private var notification: Notification? = null
-    private var notificationManager: NotificationManager? = null
-
+    private var mediaController: MediaControllerCompat? = null
+    private var callback: MediaControllerCompat.Callback? = null
+    private var serviceConnection: ServiceConnection? = null
+    private var playerServiceBinder: PlayerService.PlayerServiceBinder? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         initPlayer()
         fab_view.setOnClickListener {
             isPlaying = if (!isPlaying) {
-                playRadio()
-                fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
-//                if (notification == null)
-//                    notification = generateNotification(applicationContext)
-                notificationManager?.notify(33, notification)
+//                fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
+                mediaController?.transportControls?.play()
+                Toast.makeText(this, "play", Toast.LENGTH_SHORT).show()
                 true
             } else {
-                stopRadio()
-                fab_view.changeMode(FloatingMusicActionButton.Mode.PLAY_TO_STOP)
-                notificationManager?.cancel(33)
+//                fab_view.changeMode(FloatingMusicActionButton.Mode.PLAY_TO_STOP)
+                mediaController?.transportControls?.stop()
                 false
             }
         }
     }
 
     private fun initPlayer() {
-        player = MediaPlayer()
-        player.setAudioStreamType(AudioManager.STREAM_MUSIC)
-        player.setDataSource("http://92.60.176.13:8000/radio")
-    }
-
-    private fun playRadio() {
-        player.prepareAsync()
-        player.setOnPreparedListener {
-            player.start()
+        callback = object : MediaControllerCompat.Callback() {
+            override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
+                if (state == null)
+                    return
+                val playing = state.state == PlaybackStateCompat.STATE_PLAYING
+//                playButton.setEnabled(!playing)
+//                pauseButton.setEnabled(playing)
+//                stopButton.setEnabled(playing)
+                if (playing)
+                    fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
+                else
+                    fab_view.changeMode(FloatingMusicActionButton.Mode.PLAY_TO_STOP)
+            }
         }
+
+        serviceConnection = object : ServiceConnection {
+            override fun onServiceConnected(name: ComponentName, service: IBinder) {
+                playerServiceBinder = service as PlayerService.PlayerServiceBinder
+                try {
+                    mediaController = MediaControllerCompat(this@MainActivity,
+                            playerServiceBinder!!.mediaSessionToken)
+                    mediaController?.registerCallback(callback as MediaControllerCompat.Callback)
+                    callback?.onPlaybackStateChanged(mediaController!!.playbackState)
+                } catch (e: RemoteException) {
+                    mediaController = null
+                }
+
+            }
+
+            override fun onServiceDisconnected(name: ComponentName) {
+                playerServiceBinder = null
+                if (mediaController != null) {
+                    mediaController?.unregisterCallback(callback as MediaControllerCompat.Callback)
+                    mediaController = null
+                }
+            }
+        }
+        bindService(Intent(this, PlayerService::class.java), serviceConnection, Context.BIND_AUTO_CREATE)
     }
 
-    private fun stopRadio() {
-        player.stop()
-        player.release()
-        initPlayer()
+    override fun onDestroy() {
+        super.onDestroy()
+        playerServiceBinder = null
+        mediaController?.unregisterCallback(callback as MediaControllerCompat.Callback)
+        mediaController = null
+        if (serviceConnection != null)
+            unbindService(serviceConnection)
     }
-
-//    private fun generateNotification(context: Context): Notification {
-//        return Notification.Builder(context)
-//                .setVisibility(Notification.VISIBILITY_PUBLIC)
-//                .setSmallIcon(R.drawable.ic_radio)
-//                .setAutoCancel(false)
-////                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
-////                        R.drawable.ic_stop), "stop", getStopIntent(this)).build())
-//                .addAction(generateAction(R.drawable.stop_icon,"stop", "action_stop"))
-//                .addAction(generateAction(R.drawable.pause_icon,"pause", "action_pause"))
-////                .addAction(Notification.Action.Builder(Icon.createWithResource(context,
-////                        R.drawable.ic_play_arrow), "play", null).build())
-//                .setContentTitle("mAuthor")
-//                .setContentText("mTitle")
-//                .setColor(resources.getColor(R.color.colorAccent))
-//                .setUsesChronometer(true)
-//                .setContentIntent(PendingIntent.getService(context, 0, Intent(context, MainActivity::class.java), PendingIntent.FLAG_UPDATE_CURRENT))
-//                .build()
-//
-//    }
-
-//    private fun generateAction(icon: Int, title: String, intentAction: String): Notification.Action {
-//        val intent = Intent(applicationContext, MainActivity::class.java)
-//        intent.action = intentAction
-//        val pendingIntent = PendingIntent.getService(applicationContext, 1, intent, 0)
-//        return Notification.Action.Builder(icon, title, pendingIntent).build()
-//    }
-//
-//    private fun getStopIntent(context: Context): PendingIntent? {
-//        val controlIntent = Intent("od.twins.radio.mediacontrol")
-//        controlIntent.putExtra("Notification_playback_state", "pause")
-//        return PendingIntent.getBroadcast(context, 101, controlIntent, 0)
-//    }
 }
