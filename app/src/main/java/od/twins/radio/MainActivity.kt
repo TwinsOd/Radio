@@ -28,12 +28,10 @@ class MainActivity : AppCompatActivity() {
         initPlayer()
         fab_view.setOnClickListener {
             isPlaying = if (!isPlaying) {
-//                fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
                 mediaController?.transportControls?.play()
                 Toast.makeText(this, "play", Toast.LENGTH_SHORT).show()
                 true
             } else {
-//                fab_view.changeMode(FloatingMusicActionButton.Mode.PLAY_TO_STOP)
                 mediaController?.transportControls?.stop()
                 false
             }
@@ -45,11 +43,7 @@ class MainActivity : AppCompatActivity() {
             override fun onPlaybackStateChanged(state: PlaybackStateCompat?) {
                 if (state == null)
                     return
-                val playing = state.state == PlaybackStateCompat.STATE_PLAYING
-//                playButton.setEnabled(!playing)
-//                pauseButton.setEnabled(playing)
-//                stopButton.setEnabled(playing)
-                if (playing)
+                if (state.state == PlaybackStateCompat.STATE_PLAYING)
                     fab_view.changeMode(FloatingMusicActionButton.Mode.STOP_TO_PLAY)
                 else
                     fab_view.changeMode(FloatingMusicActionButton.Mode.PLAY_TO_STOP)

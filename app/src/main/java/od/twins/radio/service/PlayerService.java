@@ -67,8 +67,7 @@ public class PlayerService extends Service {
                     | PlaybackStateCompat.ACTION_STOP
                     | PlaybackStateCompat.ACTION_PAUSE
                     | PlaybackStateCompat.ACTION_PLAY_PAUSE
-                    | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                    | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                    | PlaybackStateCompat.ACTION_STOP
     );
 
     private MediaSessionCompat mediaSession;
@@ -351,14 +350,13 @@ public class PlayerService extends Service {
 
     private Notification getNotification(int playbackState) {
         NotificationCompat.Builder builder = MediaStyleHelper.from(this, mediaSession);
-        builder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_previous, getString(R.string.previous), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)));
-
-        if (playbackState == PlaybackStateCompat.STATE_PLAYING)
-            builder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_pause, getString(R.string.pause), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY_PAUSE)));
-        else
-            builder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_play, getString(R.string.play), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY_PAUSE)));
-
-        builder.addAction(new NotificationCompat.Action(android.R.drawable.ic_media_next, getString(R.string.next), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_SKIP_TO_NEXT)));
+        builder.addAction(new NotificationCompat.Action(R.drawable.ic_stop, getString(R.string.stop), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_STOP)));
+        if (playbackState == PlaybackStateCompat.STATE_PLAYING) {
+            builder.addAction(new NotificationCompat.Action(R.drawable.ic_pause, getString(R.string.pause), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY_PAUSE)));
+        }
+        else {
+            builder.addAction(new NotificationCompat.Action(R.drawable.ic_play_arrow, getString(R.string.play), MediaButtonReceiver.buildMediaButtonPendingIntent(this, PlaybackStateCompat.ACTION_PLAY_PAUSE)));
+        }
         builder.setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
                 .setShowActionsInCompactView(1)
                 .setShowCancelButton(true)
